@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wedding Guest Links Generator · អ្នកបង្កើតតំណភ្ញៀវ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💍</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Moul&family=Battambang:wght@400;700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wine:#2a0618;
+  --wine2:#1f0412;
+  --deep:#7a1f45;
+  --rose:#d6557f;
+  --blush:#fff3f6;
+  --rg1:#f6dcc4;
+  --rg2:#c98a6b;
+  --g:linear-gradient(90deg,#f6dcc4,#fffaf0,#e3a98c,#fffaf0,#f6dcc4);
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Battambang',serif;background:radial-gradient(ellipse at 50% 0,#5c1538,#2a0618 75%);color:#fbe7dc;line-height:1.8;padding:2.5rem 1rem;min-height:100vh}
+.w{max-width:54rem;margin:0 auto;background:rgba(42,6,24,.75);backdrop-filter:blur(10px);border:1px solid var(--rg2);border-radius:1.2rem;padding:2.5rem 2rem;box-shadow:0 24px 50px rgba(0,0,0,.5)}
+h1{font-family:'Moul',serif;color:var(--rg1);font-size:1.6rem;text-align:center;margin-bottom:.3rem;letter-spacing:.02em}
+.sub{text-align:center;color:#e8bfa8;font-size:.95rem;margin-bottom:2rem;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:.04em}
+.field{margin-bottom:1.5rem}
+label{display:block;font-weight:700;color:var(--rg1);margin-bottom:.4rem;font-size:.95rem}
+input,textarea{width:100%;font:inherit;background:#18030e;color:#fff5ea;border:1px solid rgba(201,138,107,.6);border-radius:.6rem;padding:.75rem 1rem;font-size:1rem}
+input:focus,textarea:focus{outline:none;border-color:var(--rg1);box-shadow:0 0 0 3px rgba(214,85,127,.35)}
+.hint{font-size:.85rem;color:#d8a694;margin-top:.4rem}
+.btns{display:flex;gap:1rem;flex-wrap:wrap;margin:1.8rem 0}
+button{background:linear-gradient(#fbe4cf,#d79a7c);color:#4a0f2a;border:0;border-radius:2rem;padding:.65rem 1.8rem;font:700 .95rem 'Battambang',sans-serif;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:transform .2s,box-shadow .2s}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+button.sec{background:transparent;color:var(--rg1);border:1px solid var(--rg1);box-shadow:none}
+button.sec:hover{background:rgba(246,220,196,.12)}
+table{width:100%;border-collapse:collapse;margin-top:1.5rem}
+th,td{padding:.75rem .8rem;text-align:left;border-bottom:1px solid rgba(201,138,107,.3);font-size:.92rem}
+th{color:var(--rg1);font-family:'Moul',serif;font-size:.85rem;font-weight:400}
+.url-cell{word-break:break-all;color:#ffd8c4;font-family:monospace;font-size:.85rem}
+.act{display:flex;gap:.5rem}
+.act button{padding:.25rem .75rem;font-size:.8rem;border-radius:.4rem}
+.act a{display:inline-block;padding:.25rem .75rem;font-size:.8rem;border-radius:.4rem;color:var(--rg1);border:1px solid var(--rg1);text-decoration:none;transition:background .2s}
+.act a:hover{background:rgba(246,220,196,.15)}
+.copied{background:#b0305e!important;color:#fff!important}
+.stats{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(201,138,107,.35);font-size:.9rem;color:#e8bfa8}
+.lang-toggle{margin-top:.8rem;display:flex;gap:1.5rem;align-items:center;color:#fbe7dc;font-size:.9rem}
+.lang-toggle label{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-weight:400}
+</style>
+</head>
+<body>
+<div class="w">
+  <h1>បង្កើតតំណអញ្ជើញផ្ទាល់ខ្លួន</h1>
+  <p class="sub">Wedding Invitation Personalized Links Generator</p>
+
+  <div class="field">
+    <label for="baseUrl">អាសយដ្ឋាន Vercel របស់អ្នក (Vercel Website URL):</label>
+    <input id="baseUrl" placeholder="https://your-wedding.vercel.app" value="">
+    <p class="hint">ឧទាហរណ៍៖ https://dara-sophea.vercel.app</p>
+  </div>
+
+  <div class="field">
+    <label for="names">បញ្ជីឈ្មោះភ្ញៀវ (មួយឈ្មោះក្នុងមួយបន្ទាត់) / Guest Names (one per line):</label>
+    <textarea id="names" rows="7" placeholder="ឯកឧត្តម ជា សុខា&#10;លោកជំទាវ សុផល&#10;Bong Piseth & Family&#10;Mr. David Miller"></textarea>
+    <p class="hint">បញ្ចូលឈ្មោះភ្ញៀវនីមួយៗ ឈ្មោះនឹងបង្ហាញនៅលើត្រាជ័រធៀបការ និងកាតអញ្ជើញដោយស្វ័យប្រវត្តិ។</p>
+  </div>
+
+  <div class="field">
+    <label>ជម្រើសភាសាដំបូងសម្រាប់ភ្ញៀវ (Default Language for Links):</label>
+    <div class="lang-toggle">
+      <label><input type="radio" name="langMode" value="km" checked> ភាសាខ្មែរ (Default / Khmer)</label>
+      <label><input type="radio" name="langMode" value="en"> English First (?lang=en)</label>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button id="gen">បង្កើតតំណ (Generate)</button>
+    <button id="copyAll" class="sec" style="display:none">ចម្លងទាំងអស់ (Copy All)</button>
+    <button id="exportCsv" class="sec" style="display:none">ទាញយកជា CSV (Export CSV)</button>
+  </div>
+
+  <div id="result" style="display:none">
+    <div class="stats">
+      <span id="count"></span>
+      <span id="hintMsg">ចុច "ចម្លង" ដើម្បីផ្ញើតាម Telegram / Facebook</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:5%">#</th>
+          <th style="width:30%">ឈ្មោះភ្ញៀវ (Guest)</th>
+          <th style="width:45%">តំណភ្ជាប់ (Personal Link)</th>
+          <th style="width:20%">សកម្មភាព</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let linksData = [];
+
+if (location.protocol.startsWith('http')) {
+  $('baseUrl').value = location.origin;
+}
+
+$('gen').onclick = () => {
+  let base = $('baseUrl').value.trim().replace(/\/+$/, '');
+  if (!base) {
+    alert('សូមបញ្ចូលអាសយដ្ឋាន Vercel (Please enter your Vercel URL)');
+    return;
+  }
+  if (!base.startsWith('http://') && !base.startsWith('https://')) {
+    base = 'https://' + base;
+    $('baseUrl').value = base;
+  }
+
+  const raw = $('names').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (raw.length === 0) {
+    alert('សូមបញ្ចូលឈ្មោះភ្ញៀវយ៉ាងហោចណាស់មួយ (Please enter at least one guest name)');
+    return;
+  }
+
+  const isEn = document.querySelector('input[name="langMode"]:checked').value === 'en';
+
+  linksData = raw.map((name, i) => {
+    let url = `${base}/?to=${encodeURIComponent(name)}`;
+    if (isEn) url += '&lang=en';
+    return { id: i + 1, name, url };
+  });
+
+  const tbody = $('tbody');
+  tbody.innerHTML = '';
+  linksData.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${item.id}</td>
+      <td><strong>${escapeHtml(item.name)}</strong></td>
+      <td class="url-cell">${escapeHtml(item.url)}</td>
+      <td class="act">
+        <button onclick="copyLink('${escapeJs(item.url)}', this)">ចម្លង</button>
+        <a href="${escapeHtml(item.url)}" target="_blank">បើក</a>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  $('count').textContent = `ភ្ញៀវសរុប៖ ${linksData.length} នាក់`;
+  $('result').style.display = 'block';
+  $('copyAll').style.display = 'inline-block';
+  $('exportCsv').style.display = 'inline-block';
+};
+
+function copyLink(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'បានចម្លង ✓';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 1800);
+  });
+}
+
+$('copyAll').onclick = () => {
+  if (!linksData.length) return;
+  const text = linksData.map(d => `${d.name}: ${d.url}`).join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    alert('បានចម្លងតំណទាំងអស់ទៅ Clipboard រួចរាល់! (All links copied to clipboard)');
+  });
+};
+
+$('exportCsv').onclick = () => {
+  if (!linksData.length) return;
+  let csv = "\uFEFFGuest Name,Link\n";
+  linksData.forEach(d => {
+    csv += `"${d.name.replace(/"/g, '""')}","${d.url}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wedding_guest_links.csv';
+  a.click();
+};
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function escapeJs(s) {
+  return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+</script>
+</body>
+</html>

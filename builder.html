@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>បង្កើតសំបុត្រអញ្ជើញ · Invitation Builder</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap">
+<style>
+:root{--rose:#d6557f;--deep:#7a1f45;--blush:#fff3f6;--pink:#f9c9d8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--blush);color:var(--deep);font:400 1rem/1.7 'Battambang','Noto Serif Khmer',sans-serif}
+header{padding:28px 16px 18px;text-align:center;background:linear-gradient(#fde3ea,var(--blush))}
+header h1{font:400 1.5rem/1.9 'Moul',serif;margin:0;color:var(--rose)}header p{margin:0;opacity:.85}
+main{max-width:860px;margin:0 auto;padding:10px 14px 60px}
+fieldset{border:1px solid var(--rose);background:#fff;margin:16px 0;padding:14px 16px 16px;border-radius:10px}
+legend{padding:0 10px;font-weight:700;color:var(--rose)}
+.g2{display:grid;gap:0 14px}@media(min-width:700px){.g2{grid-template-columns:1fr 1fr}}
+label{display:block;font-size:.88rem;margin-top:8px}
+input,textarea,select{width:100%;font:inherit;padding:7px 10px;border:1px solid #e7b6c6;border-radius:6px;background:#fffafb;color:var(--deep)}
+input[type=file]{padding:5px;background:#fff}
+textarea{min-height:64px}
+.row{display:grid;gap:6px;grid-template-columns:1fr 1fr;padding:10px;border:1px dashed #e7b6c6;border-radius:8px;margin-top:8px;position:relative}
+.row>*{min-width:0}.row .wide{grid-column:1/-1}
+.row .rm{position:absolute;right:6px;top:4px;width:auto;border:0;background:none;color:var(--rose);cursor:pointer;font-size:1.1rem}
+.hint{font-size:.8rem;opacity:.75;margin:2px 0 0}
+button.b{font:inherit;cursor:pointer;border-radius:99px;padding:8px 22px;border:1.5px solid var(--rose);background:#fff;color:var(--deep);margin:8px 6px 0 0;width:auto}
+button.b.fill{background:linear-gradient(#f08cab,#d6557f);color:#fff;font-weight:700}
+#st{margin:10px 0;min-height:1.6em;font-weight:700}.err{color:#b00020}.ok{color:#1b7a3d}
+#pv{position:fixed;inset:0;z-index:50;background:#000;display:none}#pv.on{display:block}
+#pv iframe{width:100%;height:100%;border:0}
+#pv button{position:absolute;right:10px;bottom:70px;z-index:2;background:#fff;color:var(--deep);border:1.5px solid var(--rose);border-radius:99px;padding:6px 16px;font:inherit;cursor:pointer}
+pre{white-space:pre-wrap;background:#fff;border:1px solid #e7b6c6;padding:10px;border-radius:8px;font-size:.85rem}
+</style>
+</head>
+<body>
+<header><h1>បង្កើតសំបុត្រអញ្ជើញរបស់អ្នក</h1><p>Create your wedding invitation: fill in the form, preview it, then download your files.</p></header>
+<main>
+<form id="f" onsubmit="return false"></form>
+<div id="st"></div>
+<div id="out"></div>
+</main>
+<div id="pv"><button type="button" id="pvx">✕ Close preview</button><iframe id="fr" title="Preview"></iframe></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+/* ===== Designer settings (yours, not the customer's) ===== */
+const DESIGNER={name:'Leng Cheatong',url:'https://t.me/your_username'};
+/* ========================================================= */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const f=(id,l,ph='',t='text')=>`<label>${l}<input id="${id}" type="${t}" placeholder="${ph}"></label>`;
+const ta=(id,l,ph='')=>`<label>${l}<textarea id="${id}" placeholder="${ph}"></textarea></label>`;
+const person=(p,title,ex)=>`<fieldset><legend>${title}</legend>
+ ${f(p+'_km','ឈ្មោះជាភាសាខ្មែរ / Name in Khmer',ex[0])}${f(p+'_en','ឈ្មោះជាអក្សរឡាតាំង / Name in English',ex[1])}
+ ${f(p+'_sk','ឈ្មោះខ្លី (ខ្មែរ) / Short name, Khmer',ex[2])}${f(p+'_se','ឈ្មោះខ្លី (អង្គ់គ្លេស) / Short name, English',ex[3])}
+ ${ta(p+'_pk','ឪពុកម្តាយ (ខ្មែរ) / Parents in Khmer, one per line',ex[4])}${ta(p+'_pe','Parents in English, one per line',ex[5])}</fieldset>`;
+const ICONS=['❀','✦','♥','☀','♪','✿'];
+const progRow=()=>`<div class="row prog"><label>ម៉ោង / Time<input type="time" class="t"></label><label>រូបតំណាង / Icon<select class="ic">${ICONS.map(i=>`<option>${i}</option>`).join('')}</select></label>
+ <label>ពិធី (ខ្មែរ) / Event in Khmer<input class="km" placeholder="ពិធីសូត្រមន្ត"></label><label>Event in English<input class="en" placeholder="Buddhist blessing"></label><button type="button" class="rm">✕</button></div>`;
+const giftRow=()=>`<div class="row gift"><label>ធនាគារ / Bank<input class="bank" placeholder="ABA Bank"></label><label>ឈ្មោះគណនី / Account name<input class="name" placeholder="SOK DARA"></label>
+ <label>លេខគណនី / Account number<input class="no" placeholder="000 123 456"></label><label>រូប QR / QR image<input type="file" class="qr" accept="image/*"></label><button type="button" class="rm">✕</button></div>`;
+const storyRow=()=>`<div class="row story"><label>ចំណងជើង (ខ្មែរ) / Title in Khmer<input class="tk"></label><label>Title in English<input class="te"></label>
+ <label>អត្ថបទខ្លី (ខ្មែរ) / Short text, Khmer<input class="xk"></label><label>Short text in English<input class="xe"></label><label class="wide">រូបភាព / Photo<input type="file" class="im" accept="image/*"></label><button type="button" class="rm">✕</button></div>`;
+$('#f').innerHTML=
+ person('g','កូនកំលោះ / The Groom',['សុខ ដារ៉ា','Sok Dara','ដារ៉ា','Dara','លោក សុខ វិបុល\nលោកស្រី ម៉ម សុជាតា','Mr. Sok Vipol\nMrs. Mom Sochata'])+
+ person('b','កូនក្រមុំ / The Bride',['ចាន់ សុភា','Chan Sophea','សុភា','Sophea','លោក ចាន់ សារិន\nលោកស្រី លី សុខា','Mr. Chan Sarin\nMrs. Ly Sokha'])+
+ `<fieldset><legend>ថ្ងៃមង្គលការ / Wedding date</legend><div class="g2">${f('date','ថ្ងៃខែឆ្នាំ / Date','','date')}${f('lunar','ថ្ងៃខែចន្ទគតិ (មិនបង្ខំ) / Khmer lunar date (optional)','')}</div></fieldset>
+ <fieldset><legend>កម្មវិធីពិធី / Programme</legend><div class="g2">${f('dl_km','ចំណងជើងកម្មវិធី (ខ្មែរ) / Heading in Khmer','កម្មវិធីថ្ងៃមង្គលការ')}${f('dl_en','Heading in English','Wedding day')}</div><div id="prog"></div><button type="button" class="b" id="addp">+ បន្ថែមពិធី / Add event</button></fieldset>
+ <fieldset><legend>ទីកន្លែង / Venue</legend><div class="g2">${f('v_km','ឈ្មោះទីកន្លែង (ខ្មែរ) / Venue in Khmer')}${f('v_en','Venue in English')}${f('va_km','អាសយដ្ឋាន (ខ្មែរ) / Address in Khmer')}${f('va_en','Address in English')}</div>
+ ${f('v_q','ឈ្មោះសម្រាប់ស្វែងរកក្នុងផែនទី / Name to search on the map','Sample Hotel Phnom Penh')}${f('v_map','តំណ Google Maps (មិនបង្ខំ) / Google Maps link (optional)','https://maps.app.goo.gl/...','url')}</fieldset>
+ <fieldset><legend>ទំនាក់ទំនង / Contact</legend><div class="g2">${f('tg','Telegram username (no @)','your_username')}${f('ph','លេខទូរស័ព្ទ / Phone with +855','+85512345678','tel')}</div></fieldset>
+ <fieldset><legend>អំណោយមង្គលការ / Gift accounts (optional, up to 2)</legend><div id="gifts"></div><button type="button" class="b" id="addg">+ បន្ថែមគណនី / Add account</button></fieldset>
+ <fieldset><legend>ដំណើរស្នេហ៍ / Love story (optional, up to 3)</legend><div id="story"></div><button type="button" class="b" id="adds">+ បន្ថែម / Add</button></fieldset>
+ <fieldset><legend>រូបភាព / Photos</legend>
+ <label>រូបធំខាងលើ (១ ឬ ២) / Banner photos (1 or 2)<input type="file" id="hero" accept="image/*" multiple></label>
+ <div class="g2"><label>រូបគូស្វាមីភរិយា ១ (បញ្ឈរ) / Couple photo 1 (portrait)<input type="file" id="c1" accept="image/*"></label><label>រូបគូស្វាមីភរិយា ២ (បញ្ឈរ) / Couple photo 2 (portrait)<input type="file" id="c2" accept="image/*"></label></div>
+ <label>រូបអនុស្សាវរីយ៍ (រហូតដល់ ១២) / Gallery photos (up to 12)<input type="file" id="gal" accept="image/*" multiple></label>
+ <p class="hint">Photos are resized automatically in your browser. Any size is fine.</p></fieldset>
+ <fieldset><legend>តន្ត្រី / Music (optional)</legend><label>MP3<input type="file" id="mus" accept="audio/mpeg,.mp3"></label><p class="hint">Keep it under about 4 MB. Use music you have the right to use.</p></fieldset>
+ <fieldset><legend>តំណសម្រាប់ភ្ញៀវ / Guest links (optional)</legend>${f('site','អាសយដ្ឋានគេហទំព័រ បន្ទាប់ពីផ្សាយ / Website address after publishing','https://dara-sophea.vercel.app','url')}${ta('names','ឈ្មោះភ្ញៀវ មួយបន្ទាត់មួយនាក់ / Guest names, one per line')}<button type="button" class="b" id="mk">បង្កើតតំណ / Make links</button><pre id="links" hidden></pre></fieldset>
+ <button type="button" class="b fill" id="pre">👁 មើលជាមុន / Preview</button><button type="button" class="b fill" id="dl">⬇ ទាញយកឯកសារ / Download my invitation</button><button type="button" class="b" id="rs">លុបទាំងអស់ / Clear form</button>`;
+const add=(sel,fn,max)=>{if(max&&$$(sel+' .row').length>=max)return;$(sel).insertAdjacentHTML('beforeend',fn())};
+$('#addp').onclick=()=>add('#prog',progRow);$('#addg').onclick=()=>add('#gifts',giftRow,2);$('#adds').onclick=()=>add('#story',storyRow,3);
+document.addEventListener('click',e=>{if(e.target.classList.contains('rm'))e.target.closest('.row').remove();save()});
+const V=id=>($('#'+id).value||'').trim();
+const st=(m,c='')=>{$('#st').className=c;$('#st').textContent=m};
+
+/* autosave of text (photos cannot be saved) */
+const fields=()=>$$('#f input:not([type=file]),#f textarea,#f select');
+function save(){try{localStorage.setItem('kwb',JSON.stringify({n:[$$('.prog').length,$$('.gift').length,$$('.story').length],v:fields().map(e=>e.value)}))}catch(e){}}
+function restore(){let d=null;try{d=JSON.parse(localStorage.getItem('kwb'))}catch(e){}
+ const n=d?d.n:[3,0,0];for(let i=0;i<n[0];i++)add('#prog',progRow);for(let i=0;i<n[1];i++)add('#gifts',giftRow);for(let i=0;i<n[2];i++)add('#story',storyRow);
+ if(d)fields().forEach((e,i)=>{if(d.v[i]!=null)e.value=d.v[i]})}
+restore();$('#f').addEventListener('input',save);
+$('#rs').onclick=()=>{if(confirm('Clear everything?')){try{localStorage.removeItem('kwb')}catch(e){}location.reload()}};
+
+/* images */
+async function shrink(file,max,q=.85){const bm=await createImageBitmap(file,{imageOrientation:'from-image'});const r=Math.min(1,max/Math.max(bm.width,bm.height));
+ const c=document.createElement('canvas');c.width=Math.round(bm.width*r);c.height=Math.round(bm.height*r);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0,c.width,c.height);
+ return new Promise(res=>c.toBlob(res,'image/jpeg',q))}
+
+/* build config + files */
+async function build(preview){
+ const need=[['g_km','Groom name in Khmer'],['g_en','Groom name in English'],['b_km','Bride name in Khmer'],['b_en','Bride name in English'],['date','Date'],['v_km','Venue in Khmer'],['v_en','Venue in English']];
+ const miss=need.filter(([id])=>!V(id));if(miss.length)throw Error('Please fill in: '+miss.map(m=>m[1]).join(', '));
+ const items=$$('.prog').map(r=>({t:r.querySelector('.t').value,ic:r.querySelector('.ic').value,km:r.querySelector('.km').value.trim(),en:r.querySelector('.en').value.trim()})).filter(i=>i.t&&(i.km||i.en));
+ if(!items.length)throw Error('Please add at least one event in the programme (with a time).');
+ items.forEach(i=>{i.km=i.km||i.en;i.en=i.en||i.km});items.sort((a,b)=>a.t.localeCompare(b.t));
+ const files=[];
+ const put=async(path,file,max)=>{if(!file)return '';files.push({path,blob:await shrink(file,max)});return path};
+ st('កំពុងរៀបចំរូបភាព… Preparing photos…');
+ const hero=[];for(const [i,fl] of [...$('#hero').files].slice(0,2).entries())hero.push(await put(`photos/hero${i+1}.jpg`,fl,1800));
+ const arch=await put('photos/couple1.jpg',$('#c1').files[0],1100),couple=await put('photos/couple2.jpg',$('#c2').files[0],1100);
+ const gallery=[];for(const [i,fl] of [...$('#gal').files].slice(0,12).entries())gallery.push(await put(`photos/${i+1}.jpg`,fl,1200));
+ const story=[];for(const [i,r] of $$('.story').entries()){const tk=r.querySelector('.tk').value.trim(),te=r.querySelector('.te').value.trim();if(!tk&&!te)continue;
+  const img=await put(`photos/s${i+1}.jpg`,r.querySelector('.im').files[0],1100),xk=r.querySelector('.xk').value.trim(),xe=r.querySelector('.xe').value.trim();
+  story.push({img,km:[tk||te,xk||xe],en:[te||tk,xe||xk]})}
+ const gifts=[];for(const [i,r] of $$('.gift').entries()){const no=r.querySelector('.no').value.trim();if(!no)continue;
+  gifts.push({bank:r.querySelector('.bank').value.trim(),name:r.querySelector('.name').value.trim(),no,qr:await put(`photos/qr${i+1}.jpg`,r.querySelector('.qr').files[0],800)})}
+ let music='';const mf=$('#mus').files[0];if(mf){music='music.mp3';files.push({path:'music.mp3',blob:mf})}
+ const q=V('v_q')||V('v_en');
+ const cfg={groom:{km:V('g_km'),en:V('g_en'),short:{km:V('g_sk')||V('g_km'),en:V('g_se')||V('g_en')},parents:{km:V('g_pk'),en:V('g_pe')}},
+  bride:{km:V('b_km'),en:V('b_en'),short:{km:V('b_sk')||V('b_km'),en:V('b_se')||V('b_en')},parents:{km:V('b_pk'),en:V('b_pe')}},
+  date:V('date'),lunar:V('lunar'),days:[{label:{km:V('dl_km')||'កម្មវិធីថ្ងៃមង្គលការ',en:V('dl_en')||'Wedding day'},items}],story,
+  venue:{km:V('v_km'),en:V('v_en'),addr:{km:V('va_km'),en:V('va_en')},q,map:V('v_map')||'https://maps.google.com/?q='+encodeURIComponent(q)},
+  telegram:V('tg').replace(/^.*t\.me\//,'').replace('@',''),phone:V('ph').replace(/\s/g,''),gifts,credit:DESIGNER,music,
+  photos:{hero,arch,couple,gallery}};
+ st('កំពុងបង្កើតទំព័រ… Building the page…');
+ let tpl;try{tpl=await (await fetch('index.html',{cache:'no-store'})).text();if(!tpl.includes('const C={'))throw 0}catch(e){throw Error('Cannot read index.html. Open this page from Live Server or from your published website (not by double-clicking the file), and keep index.html in the same folder.')}
+ let js=JSON.stringify(cfg,null,1).replace(/</g,'\\u003c'),urls={};
+ if(preview)for(const fl of files){const u=URL.createObjectURL(fl.blob);urls[fl.path]=u;js=js.split(`"${fl.path}"`).join(`"${u}"`)}
+ const m1='/* ============ EDIT THIS PART FOR EACH CUSTOMER ============ */',m2='/* ========================================================== */';
+ const a=tpl.indexOf(m1),b=tpl.indexOf(m2,a);if(a<0||b<0)throw Error('index.html has no edit markers.');
+ let html=tpl.slice(0,a+m1.length)+'\nconst C='+js+';\n'+tpl.slice(b);
+ const title=`${cfg.groom.en} & ${cfg.bride.en}`.replace(/"/g,'&quot;'),site=V('site').replace(/\/$/,'');
+ html=html.replace(/<title>[^<]*<\/title>/,`<title>សិរីមង្គលអាពាហ៍ពិពាហ៍ · ${title}</title>`).replace(/(<meta property="og:title" content=")[^"]*(")/,`$1សិរីមង្គលអាពាហ៍ពិពាហ៍ · ${title}$2`);
+ if(site)html=html.replace(/(<meta property="og:image" content=")[^"]*(")/,`$1${site}/photos/hero1.jpg$2`);
+ return {html,files,title:cfg.groom.en+'-'+cfg.bride.en};
+}
+$('#pre').onclick=async()=>{try{const r=await build(true);$('#fr').src=URL.createObjectURL(new Blob([r.html],{type:'text/html'}));$('#pv').classList.add('on');st('')}catch(e){st(e.message,'err')}};
+$('#pvx').onclick=()=>{$('#pv').classList.remove('on');$('#fr').src='about:blank'};
+$('#dl').onclick=async()=>{try{
+ if(!window.JSZip)throw Error('The zip tool did not load. Check your internet and try again.');
+ const r=await build(false),z=new JSZip();z.file('index.html',r.html);r.files.forEach(x=>z.file(x.path,x.blob));
+ z.file('HOW-TO-PUBLISH.txt','1. Unzip this file.\n2. Upload index.html and the photos folder (and music.mp3 if any) to a GitHub repository.\n3. On vercel.com choose Add New > Project, import the repository, press Deploy.\n4. After you know the website address, send it to the designer to set the link preview image.\n');
+ const blob=await z.generateAsync({type:'blob'}),a=document.createElement('a'),n=r.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'invitation';
+ a.href=URL.createObjectURL(blob);a.download=n+'.zip';a.click();st('រួចរាល់! Done. Your file '+n+'.zip is downloading.','ok')}catch(e){st(e.message,'err')}};
+$('#mk').onclick=()=>{const s=V('site').replace(/\/$/,'');if(!s){st('Enter the website address first.','err');return}
+ const list=$('#names').value.split('\n').map(x=>x.trim()).filter(Boolean);$('#links').textContent=list.map(n=>`${n}\n${s}/?to=${encodeURIComponent(n)}`).join('\n\n');$('#links').hidden=!list.length;st('')};
+</script>
+</body>
+</html>

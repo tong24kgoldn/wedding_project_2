@@ -1,0 +1,7 @@
+# Exclude offline guides and internal tools from public Vercel deployment
+handbook/
+guest-links.html
+*.pdf
+.vscode/
+.git
+.gitignore
